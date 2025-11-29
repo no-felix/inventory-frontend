@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider, ThemeProvider, useAuth } from '@/context';
 import { ProtectedRoute } from '@/components/auth';
 import { AppLayout } from '@/components/layout';
+import { AppWrapper } from '@/components/app-wrapper';
 
 // Pages
 import { LoginPage, RegisterPage } from '@/pages/auth';
@@ -119,12 +120,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="inventory-theme">
-        <AuthProvider>
-          <BrowserRouter>
-            <AppRoutes />
-            <Toaster position="top-right" richColors />
-          </BrowserRouter>
-        </AuthProvider>
+        <BrowserRouter>
+          <AppWrapper>
+            <AuthProvider>
+              <AppRoutes />
+              <Toaster position="top-right" richColors />
+            </AuthProvider>
+          </AppWrapper>
+        </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
   );
