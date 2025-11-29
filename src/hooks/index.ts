@@ -3,7 +3,12 @@ export {
   useLogin,
   useRegister,
   useRefreshToken,
+  useSetupStatus,
+  useSetupAdmin,
 } from './use-auth';
+
+// Health check hooks
+export { useHealthCheck } from './use-health';
 
 // Product hooks
 export {

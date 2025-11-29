@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
-import { login, register, refreshToken } from '@/api/generated';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { login, register, refreshToken, checkSetupStatus, setupAdmin } from '@/api/generated';
 import { tokenStorage } from '@/api/client';
 import type { LoginRequest, RegisterRequest } from '@/api/generated';
 
@@ -63,6 +63,43 @@ export function useRefreshToken() {
       
       if (response.data?.accessToken && response.data?.refreshToken) {
         tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
+      }
+      
+      return response.data;
+    },
+  });
+}
+
+/**
+ * Hook for checking if admin setup is required
+ */
+export function useSetupStatus() {
+  return useQuery({
+    queryKey: ['setup-status'],
+    queryFn: async () => {
+      const response = await checkSetupStatus();
+      
+      if (response.error) {
+        throw response.error;
+      }
+      
+      return response.data;
+    },
+    staleTime: 0, // Always check fresh
+    retry: false, // Don't retry if backend is down
+  });
+}
+
+/**
+ * Hook for creating the initial admin account
+ */
+export function useSetupAdmin() {
+  return useMutation({
+    mutationFn: async (userData: RegisterRequest) => {
+      const response = await setupAdmin({ body: userData });
+      
+      if (response.error) {
+        throw response.error;
       }
       
       return response.data;
