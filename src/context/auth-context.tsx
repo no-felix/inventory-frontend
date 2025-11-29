@@ -6,9 +6,9 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { authService } from '@/services';
-import { tokenStorage } from '@/lib/api-client';
-import type { AuthResponse, LoginRequest, RegisterRequest, UserResponse } from '@/types';
+import { login as loginApi, register as registerApi } from '@/api/generated';
+import { tokenStorage } from '@/api/client';
+import type { LoginRequest, RegisterRequest, AuthResponse, UserResponse } from '@/api/generated';
 
 // ----------------------------------------------------------
 // Types
@@ -64,13 +64,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = useCallback(async (credentials: LoginRequest): Promise<AuthResponse> => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const response = await authService.login(credentials);
+      const response = await loginApi({ body: credentials });
+      
+      if (response.error) {
+        throw response.error;
+      }
+      
+      if (response.data?.accessToken && response.data?.refreshToken) {
+        tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
+      }
+      
       setState({
         isAuthenticated: true,
         isLoading: false,
         user: null, // Backend doesn't return user info on login
       });
-      return response;
+      return response.data as AuthResponse;
     } catch (error) {
       setState({
         isAuthenticated: false,
@@ -84,9 +93,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = useCallback(async (userData: RegisterRequest): Promise<UserResponse> => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const user = await authService.register(userData);
+      const response = await registerApi({ body: userData });
+      
+      if (response.error) {
+        throw response.error;
+      }
+      
       setState((prev) => ({ ...prev, isLoading: false }));
-      return user;
+      return response.data as UserResponse;
     } catch (error) {
       setState((prev) => ({ ...prev, isLoading: false }));
       throw error;
@@ -94,7 +108,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const logout = useCallback(() => {
-    authService.logout();
+    tokenStorage.clearTokens();
     setState({
       isAuthenticated: false,
       isLoading: false,
