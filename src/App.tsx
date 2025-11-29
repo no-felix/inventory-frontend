@@ -14,6 +14,8 @@ import ProductDetailPage from '@/pages/products/detail';
 import CreateProductPage from '@/pages/products/create';
 import EditProductPage from '@/pages/products/edit';
 import PurchaseOrdersPage from '@/pages/purchase-orders';
+import PurchaseOrderDetailPage from '@/pages/purchase-orders/detail';
+import CreatePurchaseOrderPage from '@/pages/purchase-orders/create';
 import StockMovementsPage from '@/pages/stock-movements';
 import AnalyticsPage from '@/pages/analytics';
 import SettingsPage from '@/pages/settings';
@@ -97,8 +99,8 @@ function AppRoutes() {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="products/:id/edit" element={<EditProductPage />} />
         <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
-        <Route path="purchase-orders/new" element={<PurchaseOrdersPage />} />
-        <Route path="purchase-orders/:id" element={<PurchaseOrdersPage />} />
+        <Route path="purchase-orders/new" element={<CreatePurchaseOrderPage />} />
+        <Route path="purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
         <Route path="stock-movements" element={<StockMovementsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="analytics/*" element={<AnalyticsPage />} />
