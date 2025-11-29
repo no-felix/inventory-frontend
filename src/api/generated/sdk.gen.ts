@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateProductData, CreateProductErrors, CreateProductResponses, CreatePurchaseOrderData, CreatePurchaseOrderErrors, CreatePurchaseOrderResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, GetInventorySummaryData, GetInventorySummaryErrors, GetInventorySummaryResponses, GetLowStockAlertsData, GetLowStockAlertsErrors, GetLowStockAlertsResponses, GetProductByIdData, GetProductByIdErrors, GetProductByIdResponses, GetPurchaseOrderByIdData, GetPurchaseOrderByIdErrors, GetPurchaseOrderByIdResponses, GetReceiptsTimeSeriesData, GetReceiptsTimeSeriesErrors, GetReceiptsTimeSeriesResponses, GetSlowMovingItemsData, GetSlowMovingItemsErrors, GetSlowMovingItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsByProductData, GetStockMovementsByProductErrors, GetStockMovementsByProductResponses, GetValuationByPriceRangeData, GetValuationByPriceRangeErrors, GetValuationByPriceRangeResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListPurchaseOrdersData, ListPurchaseOrdersErrors, ListPurchaseOrdersResponses, ListStockMovementsData, ListStockMovementsErrors, ListStockMovementsResponses, LoginData, LoginErrors, LoginResponses, ReceivePurchaseOrderData, ReceivePurchaseOrderErrors, ReceivePurchaseOrderResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses } from './types.gen';
+import type { CheckSetupStatusData, CheckSetupStatusErrors, CheckSetupStatusResponses, CreateProductData, CreateProductErrors, CreateProductResponses, CreatePurchaseOrderData, CreatePurchaseOrderErrors, CreatePurchaseOrderResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, GetInventorySummaryData, GetInventorySummaryErrors, GetInventorySummaryResponses, GetLowStockAlertsData, GetLowStockAlertsErrors, GetLowStockAlertsResponses, GetProductByIdData, GetProductByIdErrors, GetProductByIdResponses, GetPurchaseOrderByIdData, GetPurchaseOrderByIdErrors, GetPurchaseOrderByIdResponses, GetReceiptsTimeSeriesData, GetReceiptsTimeSeriesErrors, GetReceiptsTimeSeriesResponses, GetSlowMovingItemsData, GetSlowMovingItemsErrors, GetSlowMovingItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsByProductData, GetStockMovementsByProductErrors, GetStockMovementsByProductResponses, GetValuationByPriceRangeData, GetValuationByPriceRangeErrors, GetValuationByPriceRangeResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListPurchaseOrdersData, ListPurchaseOrdersErrors, ListPurchaseOrdersResponses, ListStockMovementsData, ListStockMovementsErrors, ListStockMovementsResponses, LoginData, LoginErrors, LoginResponses, ReceivePurchaseOrderData, ReceivePurchaseOrderErrors, ReceivePurchaseOrderResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, SetupAdminData, SetupAdminErrors, SetupAdminResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -53,6 +53,32 @@ export const login = <ThrowOnError extends boolean = false>(options: Options<Log
  */
 export const refreshToken = <ThrowOnError extends boolean = false>(options: Options<RefreshTokenData, ThrowOnError>) => (options.client ?? client).post<RefreshTokenResponses, RefreshTokenErrors, ThrowOnError>({
     url: '/api/v1/auth/refresh',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Check if admin setup is required
+ *
+ * Check whether the initial admin setup has been completed.
+ * Returns true if no admin account exists and setup is required.
+ *
+ */
+export const checkSetupStatus = <ThrowOnError extends boolean = false>(options?: Options<CheckSetupStatusData, ThrowOnError>) => (options?.client ?? client).get<CheckSetupStatusResponses, CheckSetupStatusErrors, ThrowOnError>({ url: '/api/v1/auth/setup/status', ...options });
+
+/**
+ * Create initial admin account
+ *
+ * Create the first admin account for the system. This endpoint
+ * can only be used once - subsequent calls will return 409 Conflict.
+ * Use this endpoint during initial system setup.
+ *
+ */
+export const setupAdmin = <ThrowOnError extends boolean = false>(options: Options<SetupAdminData, ThrowOnError>) => (options.client ?? client).post<SetupAdminResponses, SetupAdminErrors, ThrowOnError>({
+    url: '/api/v1/auth/setup',
     ...options,
     headers: {
         'Content-Type': 'application/json',

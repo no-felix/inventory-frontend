@@ -79,6 +79,13 @@ export type AuthResponse = {
     tokenType?: string;
 };
 
+export type SetupStatusResponse = {
+    /**
+     * True if no admin account exists and setup is required
+     */
+    setupRequired?: boolean;
+};
+
 export type ProductRequest = {
     /**
      * Unique stock keeping unit identifier
@@ -542,6 +549,64 @@ export type RefreshTokenResponses = {
 };
 
 export type RefreshTokenResponse = RefreshTokenResponses[keyof RefreshTokenResponses];
+
+export type CheckSetupStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/setup/status';
+};
+
+export type CheckSetupStatusErrors = {
+    /**
+     * Internal server error
+     */
+    500: ProblemDetail;
+};
+
+export type CheckSetupStatusError = CheckSetupStatusErrors[keyof CheckSetupStatusErrors];
+
+export type CheckSetupStatusResponses = {
+    /**
+     * Setup status retrieved successfully
+     */
+    200: SetupStatusResponse;
+};
+
+export type CheckSetupStatusResponse = CheckSetupStatusResponses[keyof CheckSetupStatusResponses];
+
+export type SetupAdminData = {
+    body: RegisterRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/setup';
+};
+
+export type SetupAdminErrors = {
+    /**
+     * Invalid request
+     */
+    400: ProblemDetail;
+    /**
+     * Admin account already exists
+     */
+    409: ProblemDetail;
+    /**
+     * Internal server error
+     */
+    500: ProblemDetail;
+};
+
+export type SetupAdminError = SetupAdminErrors[keyof SetupAdminErrors];
+
+export type SetupAdminResponses = {
+    /**
+     * Admin account created successfully
+     */
+    201: UserResponse;
+};
+
+export type SetupAdminResponse = SetupAdminResponses[keyof SetupAdminResponses];
 
 export type ListProductsData = {
     body?: never;
