@@ -72,8 +72,9 @@ export function useRefreshToken() {
 
 /**
  * Hook for checking if admin setup is required
+ * @param enabled - Whether to enable the query (default: true)
  */
-export function useSetupStatus() {
+export function useSetupStatus(enabled = true) {
   return useQuery({
     queryKey: ['setup-status'],
     queryFn: async () => {
@@ -85,6 +86,7 @@ export function useSetupStatus() {
       
       return response.data;
     },
+    enabled,
     staleTime: 0, // Always check fresh
     retry: false, // Don't retry if backend is down
   });

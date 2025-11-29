@@ -4,6 +4,18 @@ import { useHealthCheck, useSetupStatus } from '@/hooks';
 import ServiceDownPage from '@/pages/service-down';
 import SetupPage from '@/pages/setup';
 
+// ----------------------------------------------------------
+// Setup Completion Cache
+// ----------------------------------------------------------
+
+const SETUP_COMPLETE_KEY = 'inventory_setup_complete';
+
+export const setupCache = {
+  isComplete: (): boolean => localStorage.getItem(SETUP_COMPLETE_KEY) === 'true',
+  markComplete: (): void => localStorage.setItem(SETUP_COMPLETE_KEY, 'true'),
+  clear: (): void => localStorage.removeItem(SETUP_COMPLETE_KEY),
+};
+
 interface AppWrapperProps {
   children: ReactNode;
 }
@@ -12,10 +24,14 @@ interface AppWrapperProps {
  * Wrapper component that handles:
  * 1. Backend health checking - shows service down page if backend is unreachable
  * 2. Setup status checking - redirects to setup page if no admin exists
+ *    (only checks once, cached in localStorage after setup is complete)
  */
 export function AppWrapper({ children }: AppWrapperProps) {
   const queryClient = useQueryClient();
   const [isInitialCheck, setIsInitialCheck] = useState(true);
+  
+  // Check if setup was already completed (cached in localStorage)
+  const [setupAlreadyComplete] = useState(() => setupCache.isComplete());
   
   // Health check - always runs
   const { 
@@ -24,13 +40,15 @@ export function AppWrapper({ children }: AppWrapperProps) {
     refetch: refetchHealth,
   } = useHealthCheck(true);
   
-  // Setup status - only check when backend is healthy
+  // Setup status - only check when backend is healthy AND setup not already cached as complete
   const isBackendHealthy = healthData?.status === 'UP';
+  const shouldCheckSetup = isBackendHealthy && !setupAlreadyComplete;
+  
   const { 
     data: setupData, 
     isLoading: setupLoading,
     isError: setupError,
-  } = useSetupStatus();
+  } = useSetupStatus(shouldCheckSetup);
 
   // Track if this is the initial health check
   useEffect(() => {
@@ -39,10 +57,24 @@ export function AppWrapper({ children }: AppWrapperProps) {
     }
   }, [healthLoading, isInitialCheck]);
 
+  // Cache setup completion when we confirm it's not required
+  useEffect(() => {
+    if (setupData && !setupData.setupRequired && !setupAlreadyComplete) {
+      setupCache.markComplete();
+    }
+  }, [setupData, setupAlreadyComplete]);
+
   // Handle retry from service down page
   const handleRetry = () => {
     queryClient.invalidateQueries({ queryKey: ['health'] });
     refetchHealth();
+  };
+
+  // Handle setup completion - cache and reload
+  const handleSetupComplete = () => {
+    setupCache.markComplete();
+    queryClient.invalidateQueries({ queryKey: ['setup-status'] });
+    window.location.href = '/login';
   };
 
   // Show loading spinner during initial check only
@@ -62,6 +94,11 @@ export function AppWrapper({ children }: AppWrapperProps) {
     return <ServiceDownPage onRetry={handleRetry} />;
   }
 
+  // If setup is already cached as complete, skip setup checks
+  if (setupAlreadyComplete) {
+    return <>{children}</>;
+  }
+
   // Show loading while checking setup status
   if (setupLoading) {
     return (
@@ -77,7 +114,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   // Show setup page if setup is required (no admin exists)
   // Only show if we successfully got the setup status (not on error)
   if (!setupError && setupData?.setupRequired) {
-    return <SetupPage />;
+    return <SetupPage onSetupComplete={handleSetupComplete} />;
   }
 
   // All checks passed, render the app

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -59,8 +58,11 @@ type SetupFormValues = z.infer<typeof setupSchema>;
 // Setup Page Component
 // ----------------------------------------------------------
 
-export default function SetupPage() {
-  const navigate = useNavigate();
+interface SetupPageProps {
+  onSetupComplete?: () => void;
+}
+
+export default function SetupPage({ onSetupComplete }: SetupPageProps) {
   const [error, setError] = useState<string | null>(null);
   const setupAdmin = useSetupAdmin();
 
@@ -85,7 +87,11 @@ export default function SetupPage() {
       });
       
       toast.success('Admin account created successfully! Please log in.');
-      navigate('/login');
+      
+      // Call the completion handler to cache and redirect
+      if (onSetupComplete) {
+        onSetupComplete();
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     }
