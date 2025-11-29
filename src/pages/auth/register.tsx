@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Package } from 'lucide-react';
 
 import { useAuth } from '@/context';
-import { getErrorMessage } from '@/lib/api-client';
+import { getErrorMessage } from '@/api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
