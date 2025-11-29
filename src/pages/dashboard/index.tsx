@@ -1,12 +1,24 @@
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Package,
   ShoppingCart,
-  TrendingUp,
   AlertTriangle,
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowRight,
 } from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { format, subDays } from 'date-fns';
 
 import {
   Card,
@@ -17,7 +29,9 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useInventorySummary, useLowStockAlerts } from '@/hooks';
+import { Button } from '@/components/ui/button';
+import { useInventorySummary, useLowStockAlerts, useReceiptsTimeSeries } from '@/hooks';
+import { useChartColors } from '@/lib/chart-colors';
 import type { LowStockAlertResponse } from '@/api/generated';
 
 // ----------------------------------------------------------
@@ -127,6 +141,29 @@ function LowStockItem({ alert }: LowStockItemProps) {
 export function DashboardPage() {
   const { data: summary, isLoading: summaryLoading } = useInventorySummary();
   const { data: lowStockAlerts, isLoading: alertsLoading } = useLowStockAlerts();
+  const { primary: chartColor } = useChartColors();
+  
+  // Get receipts time series for last 30 days
+  const dateRange = useMemo(() => {
+    const to = new Date();
+    const from = subDays(to, 30);
+    return {
+      from: format(from, 'yyyy-MM-dd'),
+      to: format(to, 'yyyy-MM-dd'),
+    };
+  }, []);
+  
+  const { data: receiptsData, isLoading: receiptsLoading } = useReceiptsTimeSeries(dateRange);
+
+  // Format chart data
+  const chartData = useMemo(() => {
+    if (!receiptsData) return [];
+    return receiptsData.map((item) => ({
+      date: item.date ? format(new Date(item.date), 'MMM d') : '',
+      quantity: item.totalQuantity ?? 0,
+      orders: item.orderCount ?? 0,
+    }));
+  }, [receiptsData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -189,20 +226,84 @@ export function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Chart will be displayed here</p>
-                <p className="text-sm">Receipts chart coming in Stage 5</p>
+            {receiptsLoading ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <Skeleton className="h-full w-full" />
               </div>
-            </div>
+            ) : chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorQuantity" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    className="text-muted-foreground"
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className="rounded-lg border bg-background p-3 shadow-md">
+                          <p className="font-medium">{label}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quantity: <span className="font-medium text-foreground">{payload[0].value}</span>
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Orders: <span className="font-medium text-foreground">{payload[0].payload.orders}</span>
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="quantity"
+                    stroke={chartColor}
+                    strokeWidth={2}
+                    fill="url(#colorQuantity)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No receipt data available</p>
+                  <p className="text-sm">Create purchase orders to see data</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Low Stock Items</CardTitle>
-            <CardDescription>Products below threshold</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Low Stock Items</CardTitle>
+              <CardDescription>Products below threshold</CardDescription>
+            </div>
+            {lowStockAlerts && lowStockAlerts.length > 0 && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/analytics/low-stock">
+                  View all
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             {alertsLoading ? (
@@ -219,7 +320,7 @@ export function DashboardPage() {
               </div>
             ) : lowStockAlerts && lowStockAlerts.length > 0 ? (
               <ScrollArea className="h-[300px] px-6">
-                {lowStockAlerts.map((alert) => (
+                {lowStockAlerts.slice(0, 10).map((alert) => (
                   <LowStockItem key={alert.productId} alert={alert} />
                 ))}
               </ScrollArea>
@@ -236,22 +337,53 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent Activity - Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest stock movements and orders</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[200px] items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Recent activity will be displayed here</p>
-              <p className="text-sm">Activity feed coming in Stage 5</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Links */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <Link to="/products">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <Package className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-base">Products</CardTitle>
+                <CardDescription>Manage inventory</CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
+        </Card>
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <Link to="/purchase-orders/new">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <ShoppingCart className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-base">New Order</CardTitle>
+                <CardDescription>Create purchase order</CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
+        </Card>
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <Link to="/stock-movements">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <ArrowUpRight className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-base">Movements</CardTitle>
+                <CardDescription>View stock history</CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
+        </Card>
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <Link to="/analytics">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <DollarSign className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-base">Analytics</CardTitle>
+                <CardDescription>View reports</CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
+        </Card>
+      </div>
     </div>
   );
 }
