@@ -1,15 +1,73 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, LogOut, User, ShieldCheck } from 'lucide-react';
 
-import { useTheme } from '@/context';
+import { useTheme, useAuth } from '@/context';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+// ----------------------------------------------------------
+// User Menu Component
+// ----------------------------------------------------------
+
+function UserMenu() {
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  
+  const initials = user?.username
+    ? user.username.slice(0, 2).toUpperCase()
+    : 'U';
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 gap-2 px-2">
+          <Avatar className="h-6 w-6">
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+          <span className="hidden text-sm font-medium sm:inline-block">
+            {user?.username || 'User'}
+          </span>
+          {isAdmin && (
+            <Badge variant="secondary" className="hidden h-5 gap-1 px-1.5 text-xs sm:flex">
+              <ShieldCheck className="h-3 w-3" />
+              Admin
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user?.username}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {isAdmin ? 'Administrator' : 'User'}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <User className="mr-2 h-4 w-4" />
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+          <LogOut className="mr-2 h-4 w-4" />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 // ----------------------------------------------------------
 // Theme Toggle Component
@@ -73,6 +131,7 @@ export function AppHeader() {
       {/* Right side actions */}
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <UserMenu />
       </div>
     </header>
   );
