@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CheckSetupStatusData, CheckSetupStatusErrors, CheckSetupStatusResponses, CreateProductData, CreateProductErrors, CreateProductResponses, CreatePurchaseOrderData, CreatePurchaseOrderErrors, CreatePurchaseOrderResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, GetInventorySummaryData, GetInventorySummaryErrors, GetInventorySummaryResponses, GetLowStockAlertsData, GetLowStockAlertsErrors, GetLowStockAlertsResponses, GetProductByIdData, GetProductByIdErrors, GetProductByIdResponses, GetPurchaseOrderByIdData, GetPurchaseOrderByIdErrors, GetPurchaseOrderByIdResponses, GetReceiptsTimeSeriesData, GetReceiptsTimeSeriesErrors, GetReceiptsTimeSeriesResponses, GetSlowMovingItemsData, GetSlowMovingItemsErrors, GetSlowMovingItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsByProductData, GetStockMovementsByProductErrors, GetStockMovementsByProductResponses, GetValuationByPriceRangeData, GetValuationByPriceRangeErrors, GetValuationByPriceRangeResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListPurchaseOrdersData, ListPurchaseOrdersErrors, ListPurchaseOrdersResponses, ListStockMovementsData, ListStockMovementsErrors, ListStockMovementsResponses, LoginData, LoginErrors, LoginResponses, ReceivePurchaseOrderData, ReceivePurchaseOrderErrors, ReceivePurchaseOrderResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, SetupAdminData, SetupAdminErrors, SetupAdminResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses } from './types.gen';
+import type { CheckSetupStatusData, CheckSetupStatusErrors, CheckSetupStatusResponses, CreateProductData, CreateProductErrors, CreateProductResponses, CreatePurchaseOrderData, CreatePurchaseOrderErrors, CreatePurchaseOrderResponses, CreateStockMovementData, CreateStockMovementErrors, CreateStockMovementResponses, DeleteProductData, DeleteProductErrors, DeleteProductResponses, GetInventorySummaryData, GetInventorySummaryErrors, GetInventorySummaryResponses, GetLowStockAlertsData, GetLowStockAlertsErrors, GetLowStockAlertsResponses, GetProductByIdData, GetProductByIdErrors, GetProductByIdResponses, GetPurchaseOrderByIdData, GetPurchaseOrderByIdErrors, GetPurchaseOrderByIdResponses, GetReceiptsTimeSeriesData, GetReceiptsTimeSeriesErrors, GetReceiptsTimeSeriesResponses, GetSlowMovingItemsData, GetSlowMovingItemsErrors, GetSlowMovingItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsByProductData, GetStockMovementsByProductErrors, GetStockMovementsByProductResponses, GetValuationByPriceRangeData, GetValuationByPriceRangeErrors, GetValuationByPriceRangeResponses, ListProductsData, ListProductsErrors, ListProductsResponses, ListPurchaseOrdersData, ListPurchaseOrdersErrors, ListPurchaseOrdersResponses, ListStockMovementsData, ListStockMovementsErrors, ListStockMovementsResponses, LoginData, LoginErrors, LoginResponses, ReceivePurchaseOrderData, ReceivePurchaseOrderErrors, ReceivePurchaseOrderResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, SetupAdminData, SetupAdminErrors, SetupAdminResponses, UpdateProductData, UpdateProductErrors, UpdateProductResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -182,6 +182,23 @@ export const receivePurchaseOrder = <ThrowOnError extends boolean = false>(optio
  * Retrieve a list of stock movements with optional filtering
  */
 export const listStockMovements = <ThrowOnError extends boolean = false>(options?: Options<ListStockMovementsData, ThrowOnError>) => (options?.client ?? client).get<ListStockMovementsResponses, ListStockMovementsErrors, ThrowOnError>({ url: '/api/v1/stock-movements', ...options });
+
+/**
+ * Create a stock movement
+ *
+ * Manually create a stock movement (adjustment, damage, sale, return, or transfer).
+ * This will automatically update the product's quantity on hand.
+ * Note: PO_RECEIPT movements are created automatically when receiving purchase orders.
+ *
+ */
+export const createStockMovement = <ThrowOnError extends boolean = false>(options: Options<CreateStockMovementData, ThrowOnError>) => (options.client ?? client).post<CreateStockMovementResponses, CreateStockMovementErrors, ThrowOnError>({
+    url: '/api/v1/stock-movements',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Get stock movements for a product

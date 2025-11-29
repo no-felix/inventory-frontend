@@ -240,6 +240,33 @@ export type PurchaseOrderLineResponse = {
  */
 export type PurchaseOrderStatus = 'PENDING' | 'RECEIVED' | 'CANCELLED';
 
+export type StockMovementRequest = {
+    /**
+     * ID of the product
+     */
+    productId: number;
+    /**
+     * Quantity change. Use negative values for decreases (damage, sale, etc.)
+     * and positive values for increases (return, adjustment).
+     *
+     */
+    change: number;
+    /**
+     * Reason for the movement. Note: PO_RECEIPT is not allowed here,
+     * use the purchase order receive endpoint instead.
+     *
+     */
+    reason: 'ADJUSTMENT' | 'SALE' | 'RETURN' | 'DAMAGE' | 'TRANSFER';
+    /**
+     * Optional notes about the movement
+     */
+    notes?: string;
+    /**
+     * Optional identifier of who performed this action
+     */
+    performedBy?: string;
+};
+
 export type StockMovementResponse = {
     /**
      * Unique movement identifier
@@ -977,6 +1004,43 @@ export type ListStockMovementsResponses = {
 };
 
 export type ListStockMovementsResponse = ListStockMovementsResponses[keyof ListStockMovementsResponses];
+
+export type CreateStockMovementData = {
+    body: StockMovementRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/stock-movements';
+};
+
+export type CreateStockMovementErrors = {
+    /**
+     * Invalid request
+     */
+    400: ProblemDetail;
+    /**
+     * Resource not found
+     */
+    404: ProblemDetail;
+    /**
+     * Insufficient stock for the requested change
+     */
+    409: ProblemDetail;
+    /**
+     * Internal server error
+     */
+    500: ProblemDetail;
+};
+
+export type CreateStockMovementError = CreateStockMovementErrors[keyof CreateStockMovementErrors];
+
+export type CreateStockMovementResponses = {
+    /**
+     * Stock movement created successfully
+     */
+    201: StockMovementResponse;
+};
+
+export type CreateStockMovementResponse = CreateStockMovementResponses[keyof CreateStockMovementResponses];
 
 export type GetStockMovementsByProductData = {
     body?: never;
