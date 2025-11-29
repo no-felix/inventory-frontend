@@ -27,12 +27,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useLowStockAlerts } from '@/hooks';
+import { useChartColors } from '@/lib/chart-colors';
 
 type SortField = 'name' | 'sku' | 'currentQuantity' | 'deficit';
 type SortDirection = 'asc' | 'desc';
 
 export function LowStockPage() {
   const { data: alerts, isLoading } = useLowStockAlerts();
+  const { severity: severityColors } = useChartColors();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('deficit');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -97,9 +99,23 @@ export function LowStockPage() {
   const getSeverityBadge = (current: number, threshold: number) => {
     const percentage = (current / threshold) * 100;
     if (percentage <= 25) {
-      return <Badge variant="destructive">Critical</Badge>;
+      return (
+        <Badge 
+          variant="destructive" 
+          style={{ backgroundColor: severityColors.critical }}
+        >
+          Critical
+        </Badge>
+      );
     } else if (percentage <= 50) {
-      return <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">Low</Badge>;
+      return (
+        <Badge 
+          variant="destructive" 
+          style={{ backgroundColor: severityColors.warning }}
+        >
+          Low
+        </Badge>
+      );
     } else {
       return <Badge variant="secondary">Warning</Badge>;
     }

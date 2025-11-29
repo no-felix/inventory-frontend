@@ -104,12 +104,24 @@ function StatCard({ title, value, description, icon, trend, isLoading }: StatCar
 
 interface LowStockItemProps {
   alert: LowStockAlertResponse;
+  severityColors: {
+    critical: string;
+    warning: string;
+    good: string;
+  };
 }
 
-function LowStockItem({ alert }: LowStockItemProps) {
+function LowStockItem({ alert, severityColors }: LowStockItemProps) {
   const currentQty = alert.currentQuantity ?? 0;
   const threshold = alert.threshold ?? 1;
   const stockPercentage = (currentQty / threshold) * 100;
+  
+  // Determine color based on severity - same logic for both text and bar
+  const severityColor = stockPercentage <= 25 
+    ? severityColors.critical 
+    : stockPercentage <= 50 
+      ? severityColors.warning 
+      : severityColors.good;
   
   return (
     <div className="flex items-center justify-between py-3 border-b last:border-0">
@@ -118,15 +130,16 @@ function LowStockItem({ alert }: LowStockItemProps) {
         <p className="text-xs text-muted-foreground">SKU: {alert.sku}</p>
       </div>
       <div className="text-right ml-4">
-        <p className="text-sm font-medium text-red-600">
+        <p className="text-sm font-medium" style={{ color: severityColor }}>
           {currentQty} / {threshold}
         </p>
         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full ${
-              stockPercentage <= 25 ? 'bg-red-500' : stockPercentage <= 50 ? 'bg-yellow-500' : 'bg-green-500'
-            }`}
-            style={{ width: `${Math.min(stockPercentage, 100)}%` }}
+            className="h-full rounded-full transition-all"
+            style={{ 
+              width: `${Math.min(stockPercentage, 100)}%`,
+              backgroundColor: severityColor,
+            }}
           />
         </div>
       </div>
@@ -141,7 +154,7 @@ function LowStockItem({ alert }: LowStockItemProps) {
 export function DashboardPage() {
   const { data: summary, isLoading: summaryLoading } = useInventorySummary();
   const { data: lowStockAlerts, isLoading: alertsLoading } = useLowStockAlerts();
-  const { primary: chartColor } = useChartColors();
+  const { primary: chartColor, severity: severityColors } = useChartColors();
   
   // Get receipts time series for last 30 days
   const dateRange = useMemo(() => {
@@ -321,7 +334,7 @@ export function DashboardPage() {
             ) : lowStockAlerts && lowStockAlerts.length > 0 ? (
               <ScrollArea className="h-[300px] px-6">
                 {lowStockAlerts.slice(0, 10).map((alert) => (
-                  <LowStockItem key={alert.productId} alert={alert} />
+                  <LowStockItem key={alert.productId} alert={alert} severityColors={severityColors} />
                 ))}
               </ScrollArea>
             ) : (
