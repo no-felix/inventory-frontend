@@ -27,12 +27,19 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // ----------------------------------------------------------
 // Navigation Items
@@ -82,10 +89,11 @@ const analyticsNavItems: NavItem[] = [
     url: '/analytics',
     icon: BarChart3,
     items: [
-      { title: 'Inventory Summary', url: '/analytics/summary' },
+      { title: 'Overview', url: '/analytics' },
       { title: 'Stock Levels', url: '/analytics/stock-levels' },
       { title: 'Low Stock Alerts', url: '/analytics/low-stock' },
       { title: 'Slow Moving Items', url: '/analytics/slow-moving' },
+      { title: 'Valuation', url: '/analytics/valuation' },
     ],
   },
 ];
@@ -96,9 +104,43 @@ const analyticsNavItems: NavItem[] = [
 
 function NavItemComponent({ item }: { item: NavItem }) {
   const location = useLocation();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
   const isActive = location.pathname === item.url ||
     (item.items?.some((sub) => location.pathname === sub.url) ?? false);
 
+  // When collapsed and has sub-items, use dropdown menu
+  if (item.items && isCollapsed) {
+    return (
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton tooltip={item.title} isActive={isActive}>
+              <item.icon className="h-4 w-4" />
+              <span>{item.title}</span>
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start" className="min-w-48">
+            {item.items.map((subItem) => (
+              <DropdownMenuItem key={subItem.url} asChild>
+                <NavLink
+                  to={subItem.url}
+                  className={cn(
+                    'w-full cursor-pointer',
+                    location.pathname === subItem.url && 'bg-accent'
+                  )}
+                >
+                  {subItem.title}
+                </NavLink>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    );
+  }
+
+  // Expanded state with collapsible sub-menu
   if (item.items) {
     return (
       <Collapsible asChild defaultOpen={isActive}>
