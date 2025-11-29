@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, ArrowDown, ArrowUp } from 'lucide-react';
+import { TrendingUp, ArrowDown, ArrowUp, Plus } from 'lucide-react';
 
 import {
   Card,
@@ -15,10 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { useStockMovements } from '@/hooks';
 import type { StockMovementReason } from '@/api/generated';
 import { columns } from './columns';
+import { CreateStockMovementDialog } from './create-stock-movement-dialog';
 
 // ----------------------------------------------------------
 // Reason Options
@@ -40,6 +42,7 @@ const reasonOptions: { value: StockMovementReason | 'ALL'; label: string }[] = [
 
 export function StockMovementsPage() {
   const [reasonFilter, setReasonFilter] = useState<StockMovementReason | 'ALL'>('ALL');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   const { data: movements, isLoading, error } = useStockMovements({
     reason: reasonFilter === 'ALL' ? undefined : reasonFilter,
@@ -77,8 +80,12 @@ export function StockMovementsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Stock Movements</h1>
-          <p className="text-muted-foreground">View stock movement history</p>
+          <p className="text-muted-foreground">Track and manage stock movements</p>
         </div>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Movement
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -158,10 +165,20 @@ export function StockMovementsPage() {
             emptyState={{
               title: 'No stock movements yet',
               description: 'Stock movements will appear here as inventory is received, sold, or adjusted.',
+              action: {
+                label: 'Create Movement',
+                onClick: () => setShowCreateDialog(true),
+              },
             }}
           />
         </CardContent>
       </Card>
+
+      {/* Create Stock Movement Dialog */}
+      <CreateStockMovementDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+      />
     </div>
   );
 }
