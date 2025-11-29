@@ -16,6 +16,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useInventorySummary, useLowStockAlerts } from '@/hooks';
+import type { LowStockAlertResponse } from '@/api/generated';
 
 // ----------------------------------------------------------
 // Stat Card Component
@@ -82,20 +85,48 @@ function StatCard({ title, value, description, icon, trend, isLoading }: StatCar
 }
 
 // ----------------------------------------------------------
+// Low Stock Alert Item Component
+// ----------------------------------------------------------
+
+interface LowStockItemProps {
+  alert: LowStockAlertResponse;
+}
+
+function LowStockItem({ alert }: LowStockItemProps) {
+  const currentQty = alert.currentQuantity ?? 0;
+  const threshold = alert.threshold ?? 1;
+  const stockPercentage = (currentQty / threshold) * 100;
+  
+  return (
+    <div className="flex items-center justify-between py-3 border-b last:border-0">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{alert.name}</p>
+        <p className="text-xs text-muted-foreground">SKU: {alert.sku}</p>
+      </div>
+      <div className="text-right ml-4">
+        <p className="text-sm font-medium text-red-600">
+          {currentQty} / {threshold}
+        </p>
+        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full ${
+              stockPercentage <= 25 ? 'bg-red-500' : stockPercentage <= 50 ? 'bg-yellow-500' : 'bg-green-500'
+            }`}
+            style={{ width: `${Math.min(stockPercentage, 100)}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------
 // Dashboard Page
 // ----------------------------------------------------------
 
 export function DashboardPage() {
-  // TODO: Replace with actual API calls using React Query
-  const isLoading = false;
-
-  // Placeholder data - will be replaced with real API data
-  const stats = {
-    productCount: 150,
-    totalItems: 5000,
-    lowStockCount: 12,
-    totalValue: 125000,
-  };
+  const { data: summary, isLoading: summaryLoading } = useInventorySummary();
+  const { data: lowStockAlerts, isLoading: alertsLoading } = useLowStockAlerts();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -120,39 +151,35 @@ export function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Products"
-          value={stats.productCount}
-          description="from last month"
+          value={summary?.productCount ?? 0}
+          description="unique products"
           icon={<Package className="h-4 w-4" />}
-          trend={{ value: 12, isPositive: true }}
-          isLoading={isLoading}
+          isLoading={summaryLoading}
         />
         <StatCard
           title="Total Items"
-          value={stats.totalItems.toLocaleString()}
+          value={(summary?.totalItems ?? 0).toLocaleString()}
           description="items in stock"
           icon={<ShoppingCart className="h-4 w-4" />}
-          trend={{ value: 8, isPositive: true }}
-          isLoading={isLoading}
+          isLoading={summaryLoading}
         />
         <StatCard
           title="Low Stock Alerts"
-          value={stats.lowStockCount}
+          value={summary?.lowStockCount ?? 0}
           description="products need attention"
           icon={<AlertTriangle className="h-4 w-4" />}
-          trend={{ value: 5, isPositive: false }}
-          isLoading={isLoading}
+          isLoading={summaryLoading}
         />
         <StatCard
           title="Total Value"
-          value={formatCurrency(stats.totalValue)}
+          value={formatCurrency(summary?.totalValue ?? 0)}
           description="inventory value"
           icon={<DollarSign className="h-4 w-4" />}
-          trend={{ value: 15, isPositive: true }}
-          isLoading={isLoading}
+          isLoading={summaryLoading}
         />
       </div>
 
-      {/* Charts Section - Placeholder */}
+      {/* Charts Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
@@ -166,7 +193,7 @@ export function DashboardPage() {
               <div className="text-center">
                 <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Chart will be displayed here</p>
-                <p className="text-sm">Connect to backend to see real data</p>
+                <p className="text-sm">Receipts chart coming in Stage 5</p>
               </div>
             </div>
           </CardContent>
@@ -177,14 +204,34 @@ export function DashboardPage() {
             <CardTitle>Low Stock Items</CardTitle>
             <CardDescription>Products below threshold</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Low stock alerts will appear here</p>
-                <p className="text-sm">Connect to backend to see real data</p>
+          <CardContent className="p-0">
+            {alertsLoading ? (
+              <div className="p-6 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : lowStockAlerts && lowStockAlerts.length > 0 ? (
+              <ScrollArea className="h-[300px] px-6">
+                {lowStockAlerts.map((alert) => (
+                  <LowStockItem key={alert.productId} alert={alert} />
+                ))}
+              </ScrollArea>
+            ) : (
+              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No low stock alerts</p>
+                  <p className="text-sm">All products are well stocked</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -200,7 +247,7 @@ export function DashboardPage() {
             <div className="text-center">
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Recent activity will be displayed here</p>
-              <p className="text-sm">Connect to backend to see real data</p>
+              <p className="text-sm">Activity feed coming in Stage 5</p>
             </div>
           </div>
         </CardContent>
