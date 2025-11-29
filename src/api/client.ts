@@ -154,8 +154,19 @@ client.interceptors.response.use(async (response, request) => {
 export const getErrorMessage = (error: unknown): string => {
   // Handle hey-api error structure
   if (error && typeof error === 'object') {
-    const err = error as { error?: ProblemDetail; response?: Response };
+    const err = error as { 
+      error?: ProblemDetail; 
+      response?: Response;
+      detail?: string;
+      title?: string;
+      status?: number;
+    };
     
+    // Handle ProblemDetail thrown directly (from auth context)
+    if (err.detail) return err.detail;
+    if (err.title) return err.title;
+    
+    // Handle wrapped error structure
     if (err.error) {
       if (err.error.detail) return err.error.detail;
       if (err.error.title) return err.error.title;
