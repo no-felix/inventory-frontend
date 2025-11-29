@@ -73,6 +73,10 @@ export function useRefreshToken() {
 /**
  * Hook for checking if admin setup is required
  * @param enabled - Whether to enable the query (default: true)
+ * 
+ * Note: The response is cached indefinitely once setupRequired is false,
+ * meaning after initial setup, this will use cached data and won't hit the server.
+ * Combined with localStorage caching in AppWrapper, this minimizes API calls.
  */
 export function useSetupStatus(enabled = true) {
   return useQuery({
@@ -87,7 +91,9 @@ export function useSetupStatus(enabled = true) {
       return response.data;
     },
     enabled,
-    staleTime: 0, // Always check fresh
+    // Cache forever once setup is complete - no need to re-check
+    staleTime: Infinity,
+    gcTime: Infinity,
     retry: false, // Don't retry if backend is down
   });
 }
