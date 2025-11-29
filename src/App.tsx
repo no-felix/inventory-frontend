@@ -6,6 +6,7 @@ import { AuthProvider, ThemeProvider, useAuth } from '@/context';
 import { ProtectedRoute } from '@/components/auth';
 import { AppLayout } from '@/components/layout';
 import { AppWrapper } from '@/components/app-wrapper';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 // Pages
 import { LoginPage, RegisterPage } from '@/pages/auth';
@@ -132,10 +133,12 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="inventory-theme">
         <BrowserRouter>
           <AppWrapper>
-            <AuthProvider>
-              <AppRoutes />
-              <Toaster position="top-right" richColors />
-            </AuthProvider>
+            <ErrorBoundary>
+              <AuthProvider>
+                <AppRoutes />
+                <Toaster position="top-right" richColors />
+              </AuthProvider>
+            </ErrorBoundary>
           </AppWrapper>
         </BrowserRouter>
       </ThemeProvider>
