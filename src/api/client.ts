@@ -163,11 +163,13 @@ export const getErrorMessage = (error: unknown): string => {
     };
     
     // Handle ProblemDetail thrown directly (from auth context)
+    // Prefer detail for specific message, fall back to title
     if (err.detail) return err.detail;
     if (err.title) return err.title;
     
     // Handle wrapped error structure
     if (err.error) {
+      // Prefer detail, but always show title if detail is missing
       if (err.error.detail) return err.error.detail;
       if (err.error.title) return err.error.title;
     }

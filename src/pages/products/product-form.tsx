@@ -137,7 +137,7 @@ export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProp
             name="quantityOnHand"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Initial Quantity *</FormLabel>
+                <FormLabel>{isEditing ? 'Current Quantity' : 'Initial Quantity *'}</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -145,10 +145,16 @@ export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProp
                     min="0"
                     placeholder="0"
                     {...field}
+                    disabled={isEditing}
+                    className={isEditing ? 'bg-muted' : ''}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                   />
                 </FormControl>
-                <FormDescription>Starting stock quantity</FormDescription>
+                <FormDescription>
+                  {isEditing
+                    ? 'Quantity can only be changed via stock movements'
+                    : 'Starting stock quantity'}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
