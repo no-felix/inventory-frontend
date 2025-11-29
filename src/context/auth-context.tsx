@@ -14,6 +14,13 @@ import type { LoginRequest, RegisterRequest, AuthResponse, UserResponse } from '
 // Types
 // ----------------------------------------------------------
 
+interface JwtPayload {
+  sub: string; // username
+  role: 'USER' | 'ADMIN';
+  exp: number;
+  iat: number;
+}
+
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -24,6 +31,35 @@ interface AuthContextType extends AuthState {
   login: (credentials: LoginRequest) => Promise<AuthResponse>;
   register: (userData: RegisterRequest) => Promise<UserResponse>;
   logout: () => void;
+}
+
+// ----------------------------------------------------------
+// JWT Decoder Helper
+// ----------------------------------------------------------
+
+function decodeJwt(token: string): JwtPayload | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function getUserFromToken(token: string | null): UserResponse | null {
+  if (!token) return null;
+  
+  const payload = decodeJwt(token);
+  if (!payload) return null;
+  
+  return {
+    username: payload.sub,
+    role: payload.role,
+  };
 }
 
 // ----------------------------------------------------------
@@ -51,10 +87,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = () => {
       const hasTokens = tokenStorage.hasTokens();
+      const token = tokenStorage.getAccessToken();
+      const user = getUserFromToken(token);
+      
       setState({
         isAuthenticated: hasTokens,
         isLoading: false,
-        user: null, // We could decode JWT to get user info if needed
+        user,
       });
     };
 
@@ -74,10 +113,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
       }
       
+      const user = getUserFromToken(response.data?.accessToken ?? null);
+      
       setState({
         isAuthenticated: true,
         isLoading: false,
-        user: null, // Backend doesn't return user info on login
+        user,
       });
       return response.data as AuthResponse;
     } catch (error) {
