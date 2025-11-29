@@ -10,6 +10,9 @@ import { AppLayout } from '@/components/layout';
 import { LoginPage, RegisterPage } from '@/pages/auth';
 import DashboardPage from '@/pages/dashboard';
 import ProductsPage from '@/pages/products';
+import ProductDetailPage from '@/pages/products/detail';
+import CreateProductPage from '@/pages/products/create';
+import EditProductPage from '@/pages/products/edit';
 import PurchaseOrdersPage from '@/pages/purchase-orders';
 import StockMovementsPage from '@/pages/stock-movements';
 import AnalyticsPage from '@/pages/analytics';
@@ -90,8 +93,9 @@ function AppRoutes() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="products" element={<ProductsPage />} />
-        <Route path="products/new" element={<ProductsPage />} />
-        <Route path="products/:id" element={<ProductsPage />} />
+        <Route path="products/new" element={<CreateProductPage />} />
+        <Route path="products/:id" element={<ProductDetailPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
         <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
         <Route path="purchase-orders/new" element={<PurchaseOrdersPage />} />
         <Route path="purchase-orders/:id" element={<PurchaseOrdersPage />} />
