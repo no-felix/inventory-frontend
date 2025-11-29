@@ -1,16 +1,42 @@
-import { Package, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { DataTable } from '@/components/data-table';
+import { useProducts, useDeleteProduct } from '@/hooks';
+import { getProductColumns } from './columns';
+import { DeleteProductDialog } from './delete-product-dialog';
+import type { ProductResponse } from '@/api/generated';
+import { getErrorMessage } from '@/api/client';
 
 export function ProductsPage() {
+  const { data: products, isLoading } = useProducts();
+  const deleteProductMutation = useDeleteProduct();
+  
+  const [productToDelete, setProductToDelete] = useState<ProductResponse | null>(null);
+
+  const handleDeleteClick = (product: ProductResponse) => {
+    setProductToDelete(product);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete?.id) return;
+
+    try {
+      await deleteProductMutation.mutateAsync(productToDelete.id);
+      toast.success(`Product "${productToDelete.name}" deleted successfully`);
+      setProductToDelete(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const columns = getProductColumns({
+    onDelete: handleDeleteClick,
+  });
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -29,24 +55,23 @@ export function ProductsPage() {
         </Button>
       </div>
 
-      {/* Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Products List</CardTitle>
-          <CardDescription>
-            Your products will appear here
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[400px] items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Products table will be implemented in Stage 4</p>
-              <p className="text-sm">This is a placeholder page</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        columns={columns}
+        data={products ?? []}
+        isLoading={isLoading}
+        searchKey="name"
+        searchPlaceholder="Search products by name..."
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteProductDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        productName={productToDelete?.name}
+        isDeleting={deleteProductMutation.isPending}
+      />
     </div>
   );
 }
