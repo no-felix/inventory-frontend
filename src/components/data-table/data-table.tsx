@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/empty-state';
 import {
   ChevronLeft,
   ChevronRight,
@@ -44,6 +45,15 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean;
   searchKey?: string;
   searchPlaceholder?: string;
+  emptyState?: {
+    title?: string;
+    description?: string;
+    action?: {
+      label: string;
+      onClick?: () => void;
+      href?: string;
+    };
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -52,6 +62,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   searchKey,
   searchPlaceholder = 'Search...',
+  emptyState,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -172,9 +183,29 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-48"
                 >
-                  No results.
+                  {/* Check if this is a search filter with no results */}
+                  {searchKey && table.getColumn(searchKey)?.getFilterValue() ? (
+                    <EmptyState
+                      variant="search"
+                      title="No matching results"
+                      description={`No items found matching "${table.getColumn(searchKey)?.getFilterValue()}". Try adjusting your search.`}
+                      action={{
+                        label: 'Clear search',
+                        onClick: () => table.getColumn(searchKey)?.setFilterValue(''),
+                      }}
+                    />
+                  ) : emptyState ? (
+                    <EmptyState
+                      variant="no-data"
+                      title={emptyState.title}
+                      description={emptyState.description}
+                      action={emptyState.action}
+                    />
+                  ) : (
+                    <EmptyState variant="no-data" />
+                  )}
                 </TableCell>
               </TableRow>
             )}

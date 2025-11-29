@@ -62,6 +62,14 @@ export function ProductsPage() {
         isLoading={isLoading}
         searchKey="name"
         searchPlaceholder="Search products by name..."
+        emptyState={{
+          title: 'No products yet',
+          description: 'Get started by adding your first product to the inventory.',
+          action: {
+            label: 'Add Product',
+            href: '/products/new',
+          },
+        }}
       />
 
       {/* Delete Confirmation Dialog */}

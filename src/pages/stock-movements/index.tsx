@@ -155,6 +155,10 @@ export function StockMovementsPage() {
             isLoading={isLoading}
             searchKey="productName"
             searchPlaceholder="Search by product name..."
+            emptyState={{
+              title: 'No stock movements yet',
+              description: 'Stock movements will appear here as inventory is received, sold, or adjusted.',
+            }}
           />
         </CardContent>
       </Card>

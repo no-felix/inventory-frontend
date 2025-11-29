@@ -62,6 +62,14 @@ export function PurchaseOrdersPage() {
         isLoading={isLoading}
         searchKey="supplierName"
         searchPlaceholder="Search by supplier..."
+        emptyState={{
+          title: 'No purchase orders yet',
+          description: 'Create your first purchase order to start receiving inventory.',
+          action: {
+            label: 'Create Order',
+            href: '/purchase-orders/new',
+          },
+        }}
       />
 
       {/* Receive Confirmation Dialog */}
