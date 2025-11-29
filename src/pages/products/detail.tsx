@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Package, Calendar, DollarSign, Hash } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Package, Calendar, DollarSign, Hash, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useProduct, useDeleteProduct, useProductStockMovements } from '@/hooks';
 import { DeleteProductDialog } from './delete-product-dialog';
+import { AdjustStockDialog } from './adjust-stock-dialog';
 import { getErrorMessage } from '@/api/client';
 import { DataTable, DataTableColumnHeader } from '@/components/data-table';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -127,6 +128,7 @@ export function ProductDetailPage() {
   const deleteProductMutation = useDeleteProduct();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAdjustStockDialog, setShowAdjustStockDialog] = useState(false);
 
   const handleDelete = async () => {
     if (!product?.id) return;
@@ -190,6 +192,10 @@ export function ProductDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowAdjustStockDialog(true)}>
+            <ArrowUpDown className="mr-2 h-4 w-4" />
+            Adjust Stock
+          </Button>
           <Button variant="outline" asChild>
             <Link to={`/products/${product.id}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
@@ -312,6 +318,13 @@ export function ProductDetailPage() {
         onConfirm={handleDelete}
         productName={product.name}
         isDeleting={deleteProductMutation.isPending}
+      />
+
+      {/* Adjust Stock Dialog */}
+      <AdjustStockDialog
+        open={showAdjustStockDialog}
+        onOpenChange={setShowAdjustStockDialog}
+        product={product}
       />
     </div>
   );
