@@ -19,6 +19,11 @@ import PurchaseOrderDetailPage from '@/pages/purchase-orders/detail';
 import CreatePurchaseOrderPage from '@/pages/purchase-orders/create';
 import StockMovementsPage from '@/pages/stock-movements';
 import AnalyticsPage from '@/pages/analytics';
+import AnalyticsLayout from '@/pages/analytics/layout';
+import StockLevelsPage from '@/pages/analytics/stock-levels';
+import LowStockPage from '@/pages/analytics/low-stock';
+import SlowMovingPage from '@/pages/analytics/slow-moving';
+import ValuationPage from '@/pages/analytics/valuation';
 import SettingsPage from '@/pages/settings';
 import NotFoundPage from '@/pages/not-found';
 
@@ -103,8 +108,13 @@ function AppRoutes() {
         <Route path="purchase-orders/new" element={<CreatePurchaseOrderPage />} />
         <Route path="purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
         <Route path="stock-movements" element={<StockMovementsPage />} />
-        <Route path="analytics" element={<AnalyticsPage />} />
-        <Route path="analytics/*" element={<AnalyticsPage />} />
+        <Route path="analytics" element={<AnalyticsLayout />}>
+          <Route index element={<AnalyticsPage />} />
+          <Route path="stock-levels" element={<StockLevelsPage />} />
+          <Route path="low-stock" element={<LowStockPage />} />
+          <Route path="slow-moving" element={<SlowMovingPage />} />
+          <Route path="valuation" element={<ValuationPage />} />
+        </Route>
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
