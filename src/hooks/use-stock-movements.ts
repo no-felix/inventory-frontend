@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listStockMovements,
   getStockMovementsByProduct,
+  createStockMovement,
 } from '@/api/generated';
-import type { ListStockMovementsData } from '@/api/generated';
+import type { ListStockMovementsData, StockMovementRequest } from '@/api/generated';
+import { productKeys } from './use-products';
+import { metricsKeys } from './use-metrics';
 
 // Query keys for cache management
 export const stockMovementKeys = {
@@ -39,5 +42,30 @@ export function useProductStockMovements(productId: number) {
       return response.data;
     },
     enabled: !!productId,
+  });
+}
+
+/**
+ * Hook for creating a new stock movement
+ */
+export function useCreateStockMovement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: StockMovementRequest) => {
+      const response = await createStockMovement({ body: data });
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate stock movement lists
+      queryClient.invalidateQueries({ queryKey: stockMovementKeys.all });
+      // Invalidate the specific product's movements
+      queryClient.invalidateQueries({ queryKey: stockMovementKeys.byProduct(variables.productId) });
+      // Invalidate product data (quantity changed)
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      // Invalidate metrics (inventory summary, stock levels, etc.)
+      queryClient.invalidateQueries({ queryKey: metricsKeys.all });
+    },
   });
 }

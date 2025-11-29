@@ -34,6 +34,7 @@ export {
   stockMovementKeys,
   useStockMovements,
   useProductStockMovements,
+  useCreateStockMovement,
 } from './use-stock-movements';
 
 // Metrics hooks
