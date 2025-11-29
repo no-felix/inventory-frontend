@@ -1,16 +1,42 @@
-import { ShoppingCart, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { DataTable } from '@/components/data-table';
+import { usePurchaseOrders, useReceivePurchaseOrder } from '@/hooks';
+import { getPurchaseOrderColumns } from './columns';
+import { ReceiveOrderDialog } from './receive-order-dialog';
+import type { PurchaseOrderResponse } from '@/api/generated';
+import { getErrorMessage } from '@/api/client';
 
 export function PurchaseOrdersPage() {
+  const { data: orders, isLoading } = usePurchaseOrders();
+  const receiveMutation = useReceivePurchaseOrder();
+  
+  const [orderToReceive, setOrderToReceive] = useState<PurchaseOrderResponse | null>(null);
+
+  const handleReceiveClick = (order: PurchaseOrderResponse) => {
+    setOrderToReceive(order);
+  };
+
+  const handleReceiveConfirm = async () => {
+    if (!orderToReceive?.id) return;
+
+    try {
+      await receiveMutation.mutateAsync(orderToReceive.id);
+      toast.success(`Order PO-${String(orderToReceive.id).padStart(5, '0')} received successfully`);
+      setOrderToReceive(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const columns = getPurchaseOrderColumns({
+    onReceive: handleReceiveClick,
+  });
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -29,24 +55,23 @@ export function PurchaseOrdersPage() {
         </Button>
       </div>
 
-      {/* Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Purchase Orders List</CardTitle>
-          <CardDescription>
-            Your purchase orders will appear here
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[400px] items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <ShoppingCart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Purchase orders table will be implemented in Stage 5</p>
-              <p className="text-sm">This is a placeholder page</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        columns={columns}
+        data={orders ?? []}
+        isLoading={isLoading}
+        searchKey="supplierName"
+        searchPlaceholder="Search by supplier..."
+      />
+
+      {/* Receive Confirmation Dialog */}
+      <ReceiveOrderDialog
+        open={!!orderToReceive}
+        onOpenChange={(open) => !open && setOrderToReceive(null)}
+        onConfirm={handleReceiveConfirm}
+        orderId={orderToReceive?.id}
+        isReceiving={receiveMutation.isPending}
+      />
     </div>
   );
 }
