@@ -3,6 +3,7 @@ import {
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
+  type PaginationState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -54,6 +55,13 @@ interface DataTableProps<TData, TValue> {
       href?: string;
     };
   };
+  // Server-side pagination props
+  serverPagination?: {
+    pageCount: number;
+    totalElements: number;
+    pagination: PaginationState;
+    onPaginationChange: (pagination: PaginationState) => void;
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -63,28 +71,53 @@ export function DataTable<TData, TValue>({
   searchKey,
   searchPlaceholder = 'Search...',
   emptyState,
+  serverPagination,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const [clientPagination, setClientPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const isServerPaginated = !!serverPagination;
+  const pagination = isServerPaginated ? serverPagination.pagination : clientPagination;
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    // Only use client-side pagination/sorting/filtering when not server-paginated
+    ...(isServerPaginated
+      ? {
+          manualPagination: true,
+          pageCount: serverPagination.pageCount,
+        }
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+          getFilteredRowModel: getFilteredRowModel(),
+        }),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: isServerPaginated
+      ? (updater) => {
+          const newPagination = typeof updater === 'function' 
+            ? updater(pagination) 
+            : updater;
+          serverPagination.onPaginationChange(newPagination);
+        }
+      : setClientPagination,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      pagination,
     },
   });
 
@@ -216,12 +249,16 @@ export function DataTable<TData, TValue>({
       {/* Pagination */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length > 0 && (
+          {table.getFilteredSelectedRowModel().rows.length > 0 ? (
             <span>
               {table.getFilteredSelectedRowModel().rows.length} of{' '}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
+              {isServerPaginated ? serverPagination.totalElements : table.getFilteredRowModel().rows.length} row(s) selected.
             </span>
-          )}
+          ) : isServerPaginated ? (
+            <span>
+              {serverPagination.totalElements} total items
+            </span>
+          ) : null}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">

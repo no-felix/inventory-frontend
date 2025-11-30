@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/data-table';
+import { DataTable, type PaginationState } from '@/components/data-table';
 import { useProducts, useDeleteProduct } from '@/hooks';
 import { getProductColumns } from './columns';
 import { DeleteProductDialog } from './delete-product-dialog';
@@ -12,7 +12,15 @@ import type { ProductResponse } from '@/api/generated';
 import { getErrorMessage } from '@/api/client';
 
 export function ProductsPage() {
-  const { data: productsData, isLoading } = useProducts({ size: 1000 });
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  
+  const { data: productsData, isLoading } = useProducts({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+  });
   const products = productsData?.content ?? [];
   const deleteProductMutation = useDeleteProduct();
   
@@ -61,8 +69,6 @@ export function ProductsPage() {
         columns={columns}
         data={products}
         isLoading={isLoading}
-        searchKey="name"
-        searchPlaceholder="Search products by name..."
         emptyState={{
           title: 'No products yet',
           description: 'Get started by adding your first product to the inventory.',
@@ -70,6 +76,12 @@ export function ProductsPage() {
             label: 'Add Product',
             href: '/products/new',
           },
+        }}
+        serverPagination={{
+          pageCount: productsData?.totalPages ?? 0,
+          totalElements: productsData?.totalElements ?? 0,
+          pagination,
+          onPaginationChange: setPagination,
         }}
       />
 

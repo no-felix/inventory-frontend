@@ -33,7 +33,9 @@ export function ProductSelector({
   disabled,
 }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
-  const { data: productsData, isLoading } = useProducts({ size: 1000 });
+  // Fetch a reasonable number of products for the selector
+  // For larger inventories, consider implementing a search endpoint
+  const { data: productsData, isLoading } = useProducts({ size: 200 });
   const products = productsData?.content ?? [];
 
   const availableProducts = useMemo(() => {
