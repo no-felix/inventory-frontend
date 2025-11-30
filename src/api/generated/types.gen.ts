@@ -135,6 +135,10 @@ export type ProductResponse = {
      */
     unitPrice?: number;
     /**
+     * Whether the product is active (not soft-deleted)
+     */
+    active?: boolean;
+    /**
      * Timestamp when the product was created
      */
     createdAt?: string;

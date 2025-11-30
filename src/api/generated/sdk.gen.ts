@@ -108,9 +108,12 @@ export const createProduct = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
- * Delete a product
+ * Delete a product (soft delete)
  *
- * Delete a product by its ID
+ * Soft delete a product by its ID. The product will be marked as inactive
+ * but remains in the database for historical reference (stock movements,
+ * purchase orders). Inactive products are excluded from list queries.
+ *
  */
 export const deleteProduct = <ThrowOnError extends boolean = false>(options: Options<DeleteProductData, ThrowOnError>) => (options.client ?? client).delete<DeleteProductResponses, DeleteProductErrors, ThrowOnError>({ url: '/api/v1/products/{id}', ...options });
 
