@@ -33,15 +33,15 @@ export function ProductSelector({
   disabled,
 }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
-  const { data: products, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts();
+  const products = productsData?.content ?? [];
 
   const availableProducts = useMemo(() => {
-    if (!products) return [];
     return products.filter((p) => !excludeIds.includes(p.id ?? 0));
   }, [products, excludeIds]);
 
   const selectedProduct = useMemo(() => {
-    if (!value || !products) return undefined;
+    if (!value) return undefined;
     return products.find((p) => p.id === value);
   }, [value, products]);
 

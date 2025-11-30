@@ -78,7 +78,8 @@ export function CreateStockMovementDialog({
   onOpenChange,
   defaultProductId,
 }: CreateStockMovementDialogProps) {
-  const { data: products } = useProducts();
+  const { data: productsData } = useProducts();
+  const products = productsData?.content ?? [];
   const createMutation = useCreateStockMovement();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -106,7 +107,7 @@ export function CreateStockMovementDialog({
         notes: data.notes || undefined,
       });
 
-      const product = products?.find(p => p.id === data.productId);
+      const product = products.find(p => p.id === data.productId);
       toast.success(
         `Stock ${data.direction === 'increase' ? 'increased' : 'decreased'} by ${data.quantity} for ${product?.name ?? 'product'}`
       );
@@ -133,7 +134,7 @@ export function CreateStockMovementDialog({
     onOpenChange(open);
   };
 
-  const selectedProduct = products?.find(p => p.id === form.watch('productId'));
+  const selectedProduct = products.find(p => p.id === form.watch('productId'));
   const direction = form.watch('direction');
 
   return (
@@ -166,7 +167,7 @@ export function CreateStockMovementDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {products?.map((product) => (
+                      {products.map((product) => (
                         <SelectItem key={product.id} value={product.id!.toString()}>
                           {product.sku} - {product.name} (Qty: {product.quantityOnHand})
                         </SelectItem>

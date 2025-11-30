@@ -12,7 +12,8 @@ import type { ProductResponse } from '@/api/generated';
 import { getErrorMessage } from '@/api/client';
 
 export function ProductsPage() {
-  const { data: products, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts();
+  const products = productsData?.content ?? [];
   const deleteProductMutation = useDeleteProduct();
   
   const [productToDelete, setProductToDelete] = useState<ProductResponse | null>(null);
@@ -58,7 +59,7 @@ export function ProductsPage() {
       {/* Data Table */}
       <DataTable
         columns={columns}
-        data={products ?? []}
+        data={products}
         isLoading={isLoading}
         searchKey="name"
         searchPlaceholder="Search products by name..."
