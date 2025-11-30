@@ -148,6 +148,40 @@ export type ProductResponse = {
     updatedAt?: string;
 };
 
+/**
+ * Paginated response containing products and pagination metadata
+ */
+export type PagedProductResponse = {
+    /**
+     * List of products on this page
+     */
+    content?: Array<ProductResponse>;
+    /**
+     * Total number of elements across all pages
+     */
+    totalElements?: number;
+    /**
+     * Total number of pages
+     */
+    totalPages?: number;
+    /**
+     * Current page number (0-indexed)
+     */
+    page?: number;
+    /**
+     * Number of elements per page
+     */
+    size?: number;
+    /**
+     * Whether there is a next page
+     */
+    hasNext?: boolean;
+    /**
+     * Whether there is a previous page
+     */
+    hasPrevious?: boolean;
+};
+
 export type PurchaseOrderRequest = {
     /**
      * Name of the supplier
@@ -672,7 +706,7 @@ export type ListProductsResponses = {
     /**
      * Successful operation
      */
-    200: Array<ProductResponse>;
+    200: PagedProductResponse;
 };
 
 export type ListProductsResponse = ListProductsResponses[keyof ListProductsResponses];
