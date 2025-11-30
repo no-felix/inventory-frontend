@@ -33,7 +33,7 @@ export function ProductSelector({
   disabled,
 }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
-  const { data: productsData, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts({ size: 1000 });
   const products = productsData?.content ?? [];
 
   const availableProducts = useMemo(() => {

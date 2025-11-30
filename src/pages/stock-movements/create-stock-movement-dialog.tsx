@@ -78,7 +78,7 @@ export function CreateStockMovementDialog({
   onOpenChange,
   defaultProductId,
 }: CreateStockMovementDialogProps) {
-  const { data: productsData } = useProducts();
+  const { data: productsData } = useProducts({ size: 1000 });
   const products = productsData?.content ?? [];
   const createMutation = useCreateStockMovement();
   const [isSubmitting, setIsSubmitting] = useState(false);

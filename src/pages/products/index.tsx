@@ -12,7 +12,7 @@ import type { ProductResponse } from '@/api/generated';
 import { getErrorMessage } from '@/api/client';
 
 export function ProductsPage() {
-  const { data: productsData, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts({ size: 1000 });
   const products = productsData?.content ?? [];
   const deleteProductMutation = useDeleteProduct();
   
