@@ -59,10 +59,11 @@ export function AnalyticsPage() {
     }).format(value);
   };
 
-  // Top 10 stock levels for chart
+  // Top 10 stock levels for chart (sorted by highest quantity)
   const topStockData = useMemo(() => {
     if (!stockLevels) return [];
-    return stockLevels
+    return [...stockLevels]
+      .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0))
       .slice(0, 10)
       .map((item) => ({
         name: item.name?.substring(0, 15) || 'Unknown',

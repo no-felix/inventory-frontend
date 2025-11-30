@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,9 +48,10 @@ interface ProductFormProps {
   product?: ProductResponse;
   onSubmit: (data: ProductFormValues) => Promise<void>;
   isSubmitting?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProps) {
+export function ProductForm({ product, onSubmit, isSubmitting, onDirtyChange }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -61,8 +63,16 @@ export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProp
     },
   });
 
+  const isDirty = form.formState.isDirty;
+  
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
   const handleSubmit = async (data: ProductFormValues) => {
     await onSubmit(data);
+    form.reset(data); // Reset dirty state after successful submit
   };
 
   const isEditing = !!product;

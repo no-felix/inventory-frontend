@@ -10,4 +10,3 @@ export {
   ChartSkeleton,
 } from './skeletons';
 export { AppWrapper } from './app-wrapper';
-export { UnsavedChangesDialog } from './unsaved-changes-dialog';
