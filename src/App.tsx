@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -8,25 +9,27 @@ import { AppLayout } from '@/components/layout';
 import { AppWrapper } from '@/components/app-wrapper';
 import { ErrorBoundary } from '@/components/error-boundary';
 
-// Pages
+// Auth pages (eagerly loaded)
 import { LoginPage, RegisterPage } from '@/pages/auth';
-import DashboardPage from '@/pages/dashboard';
-import ProductsPage from '@/pages/products';
-import ProductDetailPage from '@/pages/products/detail';
-import CreateProductPage from '@/pages/products/create';
-import EditProductPage from '@/pages/products/edit';
-import PurchaseOrdersPage from '@/pages/purchase-orders';
-import PurchaseOrderDetailPage from '@/pages/purchase-orders/detail';
-import CreatePurchaseOrderPage from '@/pages/purchase-orders/create';
-import StockMovementsPage from '@/pages/stock-movements';
-import AnalyticsPage from '@/pages/analytics';
-import AnalyticsLayout from '@/pages/analytics/layout';
-import StockLevelsPage from '@/pages/analytics/stock-levels';
-import LowStockPage from '@/pages/analytics/low-stock';
-import SlowMovingPage from '@/pages/analytics/slow-moving';
-import ValuationPage from '@/pages/analytics/valuation';
-import SettingsPage from '@/pages/settings';
-import NotFoundPage from '@/pages/not-found';
+
+// Lazy-loaded pages (code splitting)
+const DashboardPage = lazy(() => import('@/pages/dashboard'));
+const ProductsPage = lazy(() => import('@/pages/products'));
+const ProductDetailPage = lazy(() => import('@/pages/products/detail'));
+const CreateProductPage = lazy(() => import('@/pages/products/create'));
+const EditProductPage = lazy(() => import('@/pages/products/edit'));
+const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders'));
+const PurchaseOrderDetailPage = lazy(() => import('@/pages/purchase-orders/detail'));
+const CreatePurchaseOrderPage = lazy(() => import('@/pages/purchase-orders/create'));
+const StockMovementsPage = lazy(() => import('@/pages/stock-movements'));
+const AnalyticsPage = lazy(() => import('@/pages/analytics'));
+const AnalyticsLayout = lazy(() => import('@/pages/analytics/layout'));
+const StockLevelsPage = lazy(() => import('@/pages/analytics/stock-levels'));
+const LowStockPage = lazy(() => import('@/pages/analytics/low-stock'));
+const SlowMovingPage = lazy(() => import('@/pages/analytics/slow-moving'));
+const ValuationPage = lazy(() => import('@/pages/analytics/valuation'));
+const SettingsPage = lazy(() => import('@/pages/settings'));
+const NotFoundPage = lazy(() => import('@/pages/not-found'));
 
 // ----------------------------------------------------------
 // Query Client Configuration
@@ -41,6 +44,18 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// ----------------------------------------------------------
+// Loading Fallback for Lazy Routes
+// ----------------------------------------------------------
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 // ----------------------------------------------------------
 // Public Route Guard (redirects authenticated users)
@@ -73,53 +88,55 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        }
-      />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          }
+        />
 
-      {/* Protected Routes */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="products" element={<ProductsPage />} />
-        <Route path="products/new" element={<CreateProductPage />} />
-        <Route path="products/:id" element={<ProductDetailPage />} />
-        <Route path="products/:id/edit" element={<EditProductPage />} />
-        <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
-        <Route path="purchase-orders/new" element={<CreatePurchaseOrderPage />} />
-        <Route path="purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
-        <Route path="stock-movements" element={<StockMovementsPage />} />
-        <Route path="analytics" element={<AnalyticsLayout />}>
-          <Route index element={<AnalyticsPage />} />
-          <Route path="stock-levels" element={<StockLevelsPage />} />
-          <Route path="low-stock" element={<LowStockPage />} />
-          <Route path="slow-moving" element={<SlowMovingPage />} />
-          <Route path="valuation" element={<ValuationPage />} />
+        {/* Protected Routes */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/new" element={<CreateProductPage />} />
+          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="products/:id/edit" element={<EditProductPage />} />
+          <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
+          <Route path="purchase-orders/new" element={<CreatePurchaseOrderPage />} />
+          <Route path="purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
+          <Route path="stock-movements" element={<StockMovementsPage />} />
+          <Route path="analytics" element={<AnalyticsLayout />}>
+            <Route index element={<AnalyticsPage />} />
+            <Route path="stock-levels" element={<StockLevelsPage />} />
+            <Route path="low-stock" element={<LowStockPage />} />
+            <Route path="slow-moving" element={<SlowMovingPage />} />
+            <Route path="valuation" element={<ValuationPage />} />
+          </Route>
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
 
