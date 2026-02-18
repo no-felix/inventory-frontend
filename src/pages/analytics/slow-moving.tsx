@@ -38,6 +38,20 @@ import { useSlowMovingItems } from '@/hooks';
 type SortField = 'name' | 'sku' | 'quantityOnHand' | 'lastMovementDate';
 type SortDirection = 'asc' | 'desc';
 
+function SortButton({ field, onSort, children }: { field: SortField; onSort: (field: SortField) => void; children: React.ReactNode }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-3 h-8"
+      onClick={() => onSort(field)}
+    >
+      {children}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+
 export function SlowMovingPage() {
   const [days, setDays] = useState(30);
   const { data: items, isLoading } = useSlowMovingItems({ days });
@@ -59,7 +73,7 @@ export function SlowMovingPage() {
   const filteredData = useMemo(() => {
     if (!items) return [];
 
-    let filtered = items.filter((item) => {
+    const filtered = items.filter((item) => {
       const query = searchQuery.toLowerCase();
       return (
         item.name?.toLowerCase().includes(query) ||
@@ -147,18 +161,6 @@ export function SlowMovingPage() {
     };
   }, [filteredData]);
 
-  const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8"
-      onClick={() => handleSort(field)}
-    >
-      {children}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-
   return (
     <div className="space-y-6">
       {/* Summary */}
@@ -238,17 +240,17 @@ export function SlowMovingPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <SortButton field="sku">SKU</SortButton>
+                      <SortButton field="sku" onSort={handleSort}>SKU</SortButton>
                     </TableHead>
                     <TableHead>
-                      <SortButton field="name">Name</SortButton>
+                      <SortButton field="name" onSort={handleSort}>Name</SortButton>
                     </TableHead>
                     <TableHead className="text-right">
-                      <SortButton field="quantityOnHand">Quantity</SortButton>
+                      <SortButton field="quantityOnHand" onSort={handleSort}>Quantity</SortButton>
                     </TableHead>
                     <TableHead className="text-right">Total Value</TableHead>
                     <TableHead>
-                      <SortButton field="lastMovementDate">Last Movement</SortButton>
+                      <SortButton field="lastMovementDate" onSort={handleSort}>Last Movement</SortButton>
                     </TableHead>
                     <TableHead className="text-right">Days Idle</TableHead>
                   </TableRow>

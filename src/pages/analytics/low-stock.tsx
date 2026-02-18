@@ -32,6 +32,20 @@ import { useChartColors } from '@/lib/chart-colors';
 type SortField = 'name' | 'sku' | 'currentQuantity' | 'deficit';
 type SortDirection = 'asc' | 'desc';
 
+function SortButton({ field, onSort, children }: { field: SortField; onSort: (field: SortField) => void; children: React.ReactNode }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-3 h-8"
+      onClick={() => onSort(field)}
+    >
+      {children}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+
 export function LowStockPage() {
   const { data: alerts, isLoading } = useLowStockAlerts();
   const { severity: severityColors } = useChartColors();
@@ -43,7 +57,7 @@ export function LowStockPage() {
   const filteredData = useMemo(() => {
     if (!alerts) return [];
 
-    let filtered = alerts.filter((item) => {
+    const filtered = alerts.filter((item) => {
       const query = searchQuery.toLowerCase();
       return (
         item.name?.toLowerCase().includes(query) ||
@@ -120,18 +134,6 @@ export function LowStockPage() {
       return <Badge variant="secondary">Warning</Badge>;
     }
   };
-
-  const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8"
-      onClick={() => handleSort(field)}
-    >
-      {children}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
 
   // Summary stats
   const stats = useMemo(() => {
@@ -218,17 +220,17 @@ export function LowStockPage() {
                   <TableRow>
                     <TableHead>Severity</TableHead>
                     <TableHead>
-                      <SortButton field="sku">SKU</SortButton>
+                      <SortButton field="sku" onSort={handleSort}>SKU</SortButton>
                     </TableHead>
                     <TableHead>
-                      <SortButton field="name">Name</SortButton>
+                      <SortButton field="name" onSort={handleSort}>Name</SortButton>
                     </TableHead>
                     <TableHead className="text-right">
-                      <SortButton field="currentQuantity">Current</SortButton>
+                      <SortButton field="currentQuantity" onSort={handleSort}>Current</SortButton>
                     </TableHead>
                     <TableHead className="text-right">Threshold</TableHead>
                     <TableHead className="text-right">
-                      <SortButton field="deficit">Deficit</SortButton>
+                      <SortButton field="deficit" onSort={handleSort}>Deficit</SortButton>
                     </TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>

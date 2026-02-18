@@ -29,6 +29,20 @@ import { useStockLevels } from '@/hooks';
 type SortField = 'name' | 'sku' | 'quantity' | 'totalValue';
 type SortDirection = 'asc' | 'desc';
 
+function SortButton({ field, onSort, children }: { field: SortField; onSort: (field: SortField) => void; children: React.ReactNode }) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-3 h-8"
+      onClick={() => onSort(field)}
+    >
+      {children}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+
 export function StockLevelsPage() {
   const { data: stockLevels, isLoading } = useStockLevels();
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +63,7 @@ export function StockLevelsPage() {
   const filteredData = useMemo(() => {
     if (!stockLevels) return [];
 
-    let filtered = stockLevels.filter((item) => {
+    const filtered = stockLevels.filter((item) => {
       const query = searchQuery.toLowerCase();
       return (
         item.name?.toLowerCase().includes(query) ||
@@ -139,18 +153,6 @@ export function StockLevelsPage() {
     );
   }, [filteredData]);
 
-  const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8"
-      onClick={() => handleSort(field)}
-    >
-      {children}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-
   return (
     <div className="space-y-6">
       <Card>
@@ -195,17 +197,17 @@ export function StockLevelsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>
-                        <SortButton field="sku">SKU</SortButton>
+                        <SortButton field="sku" onSort={handleSort}>SKU</SortButton>
                       </TableHead>
                       <TableHead>
-                        <SortButton field="name">Name</SortButton>
+                        <SortButton field="name" onSort={handleSort}>Name</SortButton>
                       </TableHead>
                       <TableHead className="text-right">
-                        <SortButton field="quantity">Quantity</SortButton>
+                        <SortButton field="quantity" onSort={handleSort}>Quantity</SortButton>
                       </TableHead>
                       <TableHead className="text-right">Unit Price</TableHead>
                       <TableHead className="text-right">
-                        <SortButton field="totalValue">Total Value</SortButton>
+                        <SortButton field="totalValue" onSort={handleSort}>Total Value</SortButton>
                       </TableHead>
                     </TableRow>
                   </TableHeader>

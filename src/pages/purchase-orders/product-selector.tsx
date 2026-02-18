@@ -36,7 +36,7 @@ export function ProductSelector({
   // Fetch a reasonable number of products for the selector
   // For larger inventories, consider implementing a search endpoint
   const { data: productsData, isLoading } = useProducts({ size: 200 });
-  const products = productsData?.content ?? [];
+  const products = useMemo(() => productsData?.content ?? [], [productsData]);
 
   const availableProducts = useMemo(() => {
     return products.filter((p) => !excludeIds.includes(p.id ?? 0));

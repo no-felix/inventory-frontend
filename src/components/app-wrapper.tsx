@@ -28,7 +28,6 @@ interface AppWrapperProps {
  */
 export function AppWrapper({ children }: AppWrapperProps) {
   const queryClient = useQueryClient();
-  const [isInitialCheck, setIsInitialCheck] = useState(true);
   
   // Check if setup was already completed (cached in localStorage)
   const [setupAlreadyComplete] = useState(() => setupCache.isComplete());
@@ -37,6 +36,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   const { 
     data: healthData, 
     isLoading: healthLoading,
+    isFetched: healthFetched,
     refetch: refetchHealth,
   } = useHealthCheck(true);
   
@@ -49,13 +49,6 @@ export function AppWrapper({ children }: AppWrapperProps) {
     isLoading: setupLoading,
     isError: setupError,
   } = useSetupStatus(shouldCheckSetup);
-
-  // Track if this is the initial health check
-  useEffect(() => {
-    if (!healthLoading && isInitialCheck) {
-      setIsInitialCheck(false);
-    }
-  }, [healthLoading, isInitialCheck]);
 
   // Cache setup completion when we confirm it's not required
   useEffect(() => {
@@ -78,7 +71,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   };
 
   // Show loading spinner during initial check only
-  if (isInitialCheck && healthLoading) {
+  if (!healthFetched && healthLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
