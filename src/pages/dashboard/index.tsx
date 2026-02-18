@@ -18,7 +18,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { format, subDays } from 'date-fns';
+import { format, subDays, formatDistanceToNow } from 'date-fns';
 
 import {
   Card,
@@ -30,9 +30,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { useInventorySummary, useLowStockAlerts, useReceiptsTimeSeries } from '@/hooks';
+import { Badge } from '@/components/ui/badge';
+import { useInventorySummary, useLowStockAlerts, useReceiptsTimeSeries, usePurchaseOrders } from '@/hooks';
 import { useChartColors } from '@/lib/chart-colors';
-import type { LowStockAlertResponse } from '@/api/generated';
+import type { LowStockAlertResponse, PurchaseOrderResponse } from '@/api/generated';
 
 // ----------------------------------------------------------
 // Stat Card Component
@@ -148,12 +149,59 @@ function LowStockItem({ alert, severityColors }: LowStockItemProps) {
 }
 
 // ----------------------------------------------------------
+// Recent Order Item Component
+// ----------------------------------------------------------
+
+const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  RECEIVED: 'default',
+  PENDING: 'secondary',
+  CANCELLED: 'destructive',
+};
+
+function RecentOrderItem({ order }: { order: PurchaseOrderResponse }) {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  return (
+    <div className="flex items-center justify-between py-3 border-b last:border-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate">{order.supplierName}</p>
+          <Badge variant={statusVariant[order.status ?? ''] ?? 'outline'} className="text-xs">
+            {order.status}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {order.createdAt
+            ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })
+            : 'Unknown'}
+        </p>
+      </div>
+      <div className="text-right ml-4">
+        <p className="text-sm font-medium">
+          {formatCurrency(order.totalAmount ?? 0)}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {order.lines?.length ?? 0} item{(order.lines?.length ?? 0) !== 1 ? 's' : ''}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------
 // Dashboard Page
 // ----------------------------------------------------------
 
 export function DashboardPage() {
   const { data: summary, isLoading: summaryLoading } = useInventorySummary();
   const { data: lowStockAlerts, isLoading: alertsLoading } = useLowStockAlerts();
+  const { data: recentOrders, isLoading: ordersLoading } = usePurchaseOrders();
   const { primary: chartColor, severity: severityColors } = useChartColors();
   
   // Get receipts time series for last 30 days
@@ -349,6 +397,55 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Purchase Orders */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Recent Purchase Orders</CardTitle>
+            <CardDescription>Latest orders from suppliers</CardDescription>
+          </div>
+          {recentOrders && recentOrders.length > 0 && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/purchase-orders">
+                View all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="p-0">
+          {ordersLoading ? (
+            <div className="p-6 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : recentOrders && recentOrders.length > 0 ? (
+            <ScrollArea className="max-h-[280px] px-6">
+              {recentOrders.slice(0, 5).map((order) => (
+                <Link key={order.id} to={`/purchase-orders/${order.id}`} className="block hover:bg-muted/50 rounded-sm transition-colors">
+                  <RecentOrderItem order={order} />
+                </Link>
+              ))}
+            </ScrollArea>
+          ) : (
+            <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <ShoppingCart className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No purchase orders yet</p>
+                <p className="text-sm">Create your first purchase order</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Links */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
